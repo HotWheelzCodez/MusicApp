@@ -35,7 +35,7 @@ pub enum SongSet {
 }
 
 impl SongSet {
-    pub fn flatten(&self) -> HashSet<Song> {
+    pub fn flatten(&self, non_term_map: &HashMap<String, SongSet>) -> HashSet<Song> {
         match self {
             SongSet::Terminal(set) => set.clone(),
             SongSet::NonTerminal(name) => {
@@ -82,7 +82,7 @@ pub struct SongTreeNode {
 }
 
 impl SongTree {
-    pub fn flatten(&self) -> HashSet<Song> {
+    pub fn flatten(&self, non_term_map: &HashMap<String, SongSet>) -> HashSet<Song> {
         match self {
             SongTree::Operation(op, song_tree_node) => {
                 let op = match *op {
@@ -91,10 +91,10 @@ impl SongTree {
                     pset_format::DIFFERENCE => |l: HashSet<Song>, r| l.difference(r).map(|s| s.to_owned()).collect(),
                     _ => unreachable!()
                 };
-                op(song_tree_node.lhs.flatten(), &song_tree_node.rhs.flatten())
+                op(song_tree_node.lhs.flatten(non_term_map), &song_tree_node.rhs.flatten(non_term_map))
             },
             SongTree::Set(song_set) => {
-                song_set.flatten()
+                song_set.flatten(non_term_map)
             },
         }
     }
