@@ -65,10 +65,6 @@ impl Library {
 
         todo!()
     }
-
-    pub fn play_song<P: AsRef<Path>>(song: P) {
-        
-    }
 }
 
 
