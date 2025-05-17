@@ -164,7 +164,7 @@ impl eframe::App for MyEguiApp {
             let sets_len = sets.len();
 
             let mut i = 0;
-            while i < sets_len {
+            for (index, (name, set)) in sets.iter().enumerate() {
                 ui.horizontal(|ui| {
                     for j in 0..items_per_row {
                         let index = i + j;
@@ -174,7 +174,7 @@ impl eframe::App for MyEguiApp {
 
                         ui.group(|ui| {
                             ui.vertical(|ui| {
-                                ui.label(&sets[index].name);
+                                ui.label(set.name);
                             });
                             ui.separator();
 
@@ -188,7 +188,7 @@ impl eframe::App for MyEguiApp {
                                 radius: 8,
                                 outline_width: 1.0
                             }, "Open", egui::Vec2::new(50.0, 30.0)).clicked() {
-                                self.songs_to_show = sets[index].songs.flatten();
+                                self.songs_to_show = set.songs.flatten(&self.library.sets);
                             }
                         });
                     }
