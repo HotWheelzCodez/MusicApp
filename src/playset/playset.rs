@@ -8,8 +8,8 @@ pub struct Song {
     pub name: String,
     pub genre: String,
     pub artist: String,
-    pub album: Option<String>,
-    pub duration: Duration,
+    pub album: String,
+    pub duration: u64,
 
     pub path: String,
 }
@@ -22,19 +22,11 @@ impl Song {
             name,
             genre: meta.genre().unwrap_or("").to_owned(),
             artist: meta.artist().unwrap_or("").to_owned(),
-            album: meta.album().map(|a| a.title.to_owned()),
-            duration: Duration::from_secs_f64(meta.duration().unwrap_or(0.0)),
+            album: meta.album().map(|a| a.title).unwrap_or("").to_owned(),
+            duration: Duration::from_secs_f64(meta.duration().unwrap_or(0.0)).as_secs(),
             path: p.as_ref().to_str().unwrap().to_owned()
         })
     }
-}
-
-pub struct TerminalSongset {
-    
-}
-
-pub struct NonTerminalSongset {
-    
 }
 
 pub enum SongSet {
@@ -150,7 +142,7 @@ impl Playset {
 
 pub struct Library {
     pub universal_set: Playset,
-    pub sets: Vec<Playset>
+    pub sets: HashMap<String, Playset>
 }
 impl Library {
     pub fn initialize<P: AsRef<Path>>(universal_set: P, subsets: P) -> io::Result<Self> {
@@ -179,12 +171,12 @@ impl Library {
 
         Ok(Self {
             universal_set,
-            sets: vec![],
+            sets: HashMap::new()
         })
     }
 
     pub fn push_empty_set(&mut self, name: String) {
-        self.sets.push(Playset::empty_terminal(name));
+        self.sets.insert(name.clone(), Playset::empty_terminal(name));
     }
 }
 
