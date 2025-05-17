@@ -1,4 +1,5 @@
 use eframe::egui;
+use egui::{Color32, CornerRadius};
 
 struct ButtonStyle {
     base_color: Color32,
