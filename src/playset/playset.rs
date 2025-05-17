@@ -4,7 +4,7 @@ use audiotags::Tag;
 
 use super::pset_format;
 
-#[derive(Hash, PartialEq, Eq, Clone)]
+#[derive(Hash, PartialEq, Eq, Clone, Debug)]
 pub struct Song {
     pub name: String,
     pub genre: String,
@@ -30,6 +30,7 @@ impl Song {
     }
 }
 
+#[derive(Debug)]
 pub enum SongSet {
     Terminal(HashSet<Song>),
     NonTerminal(String)
@@ -150,6 +151,7 @@ impl SongTree {
                 }
             }
         }
+        println!("{:?}", parse_stack);
         todo!()
     }
 }
@@ -204,18 +206,20 @@ impl Library {
             name: "U".to_owned(),
             songs: SongTree::Set(SongSet::Terminal(universal_set))
         };
+
+        let mut sets = HashMap::new();
         
-        for file in subset_dir
+        for (name, file) in subset_dir
             .filter_map(|f| f.ok())
             .filter(|f| f.file_type().unwrap().is_file())
-            .map(|f| fs::read_to_string(f.path()).unwrap())
+            .map(|f| (f.file_name().into_string().unwrap(), fs::read_to_string(f.path()).unwrap()))
         {
-            
+            sets.insert(name.clone(), Playset::from_pset_string(&file, name));
         }
 
         Ok(Self {
             universal_set,
-            sets: HashMap::new()
+            sets
         })
     }
 
