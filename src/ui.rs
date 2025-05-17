@@ -7,6 +7,7 @@ use crate::playset::Library;
 use std::io::BufReader;
 use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink};
 use std::fs::File;
+use std::collections::HashSet;
 
 struct ButtonStyle {
     base_color: Color32,
@@ -57,6 +58,7 @@ struct MyEguiApp {
     stream_handle: Option<OutputStreamHandle>,
     sink: Sink,
     library: playset::Library,
+    songs_to_show: HashSet<playset::Song>,
 }
 
 impl MyEguiApp {
@@ -68,7 +70,8 @@ impl MyEguiApp {
             sink: Sink::try_new(&handle).unwrap(),
             stream_handle: Some(handle),
             library: Library::initialize("./song_library/U", "./song_library/subsets").unwrap(),
-            library_name: "".to_string()
+            library_name: "".to_string(),
+            songs_to_show: HashSet::new(),
         }
     }
 }
@@ -118,6 +121,39 @@ impl eframe::App for MyEguiApp {
             }
         });
 
+        if self.songs_to_show.len() > 0 {
+            egui::CentralPanel::default().show(ctx, |ui| {
+                ui.vertical(|ui| {
+                    for song in &self.songs_to_show {
+                        ui.group(|ui| {
+                            ui.vertical(|ui| {
+                                ui.label(song.name);
+                                ui.label(song.album);
+                                ui.label(song.artist);
+                                ui.label(song.duration.to_string());
+                            });
+                            ui.separator();
+
+                            if button(ui, &ButtonStyle {
+                                base_color: Color32::from_rgb(200, 50, 180),
+                                hover_color: Color32::from_rgb(180, 30, 160),
+                                text_color: Color32::WHITE,
+                                text_hover_color: Color32::WHITE,
+                                outline_color: Color32::WHITE,
+                                outline_hover_color: Color32::WHITE,
+                                radius: 8,
+                                outline_width: 1.0
+                            }, "Play", egui::Vec2::new(75.0, 30.0)).clicked() {
+
+                            }
+                        });
+                    }
+                });
+            });
+
+            return;
+        }
+
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.label(egui::RichText::new("Music").color(Color32::from_rgb(200, 50, 180)).size(20.0));
             ui.add_space(10.0);
@@ -152,6 +188,7 @@ impl eframe::App for MyEguiApp {
                                 radius: 8,
                                 outline_width: 1.0
                             }, "Open", egui::Vec2::new(50.0, 30.0)).clicked() {
+                                self.songs_to_show = sets[index].songs.flatten();
                             }
                         });
                     }
