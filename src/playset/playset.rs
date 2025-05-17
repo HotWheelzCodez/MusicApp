@@ -91,7 +91,20 @@ pub struct SongTreeNode {
 
 impl SongTree {
     pub fn flatten(&self) -> HashSet<Song> {
-        todo!()
+        match self {
+            SongTree::Operation(op, song_tree_node) => {
+                let op = match *op {
+                    pset_format::UNION => |l: HashSet<Song>, r| l.union(r).map(|s| s.to_owned()).collect(),
+                    pset_format::INTERSECTION => |l: HashSet<Song>, r| l.intersection(r).map(|s| s.to_owned()).collect(),
+                    pset_format::DIFFERENCE => |l: HashSet<Song>, r| l.difference(r).map(|s| s.to_owned()).collect(),
+                    _ => unreachable!()
+                };
+                op(song_tree_node.lhs.flatten(), &song_tree_node.rhs.flatten())
+            },
+            SongTree::Set(song_set) => {
+                song_set.flatten()
+            },
+        }
     }
 
     pub fn to_pset_string(&self) -> String {
