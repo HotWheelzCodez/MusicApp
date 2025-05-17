@@ -1,3 +1,4 @@
+use core::panic;
 use std::{collections::{HashMap, HashSet}, fs, io, path::Path, time::Duration};
 use audiotags::Tag;
 
@@ -10,13 +11,14 @@ pub struct Song {
     pub artist: String,
     pub album: String,
     pub duration: u64,
-
-    pub path: String,
 }
 
 impl Song {
     pub fn from_path<P: AsRef<Path>>(p: P, name: String) -> audiotags::Result<Self> {
-        let meta = Tag::new().read_from_path(&p)?;
+        let path = p.as_ref().to_str().unwrap();
+        let path = format!("{}/{}", path, name);
+        println!("Reading song data from: {}", path);
+        let meta = Tag::new().read_from_path(path)?;
         
         Ok(Self {
             name,
@@ -24,7 +26,6 @@ impl Song {
             artist: meta.artist().unwrap_or("").to_owned(),
             album: meta.album().map(|a| a.title).unwrap_or("").to_owned(),
             duration: Duration::from_secs_f64(meta.duration().unwrap_or(0.0)).as_secs(),
-            path: p.as_ref().to_str().unwrap().to_owned()
         })
     }
 }
@@ -35,11 +36,11 @@ pub enum SongSet {
 }
 
 impl SongSet {
-    pub fn flatten(&self, non_term_map: &HashMap<String, SongSet>) -> HashSet<Song> {
+    pub fn flatten(&self, non_term_map: &HashMap<String, Playset>) -> HashSet<Song> {
         match self {
             SongSet::Terminal(set) => set.clone(),
             SongSet::NonTerminal(name) => {
-                todo!()
+                non_term_map.get(name).unwrap().songs.flatten(non_term_map)
             },
         }
     }
@@ -49,7 +50,7 @@ impl SongSet {
             SongSet::Terminal(set) => {
                 out.push(pset_format::SET_START);
                 for song in set {
-                    out.push_str(&song.path);
+                    out.push_str(&song.name);
                     out.push(pset_format::SEPERATOR)
                 }
                 out.pop();
@@ -61,13 +62,6 @@ impl SongSet {
             },
         }
         out
-    }
-    pub fn from_pset_string(s: String) -> Self {
-        for c in s.chars() {
-            
-        }
-
-        todo!()
     }
 }
 
@@ -82,7 +76,7 @@ pub struct SongTreeNode {
 }
 
 impl SongTree {
-    pub fn flatten(&self, non_term_map: &HashMap<String, SongSet>) -> HashSet<Song> {
+    pub fn flatten(&self, non_term_map: &HashMap<String, Playset>) -> HashSet<Song> {
         match self {
             SongTree::Operation(op, song_tree_node) => {
                 let op = match *op {
@@ -114,6 +108,50 @@ impl SongTree {
             },
         }
     }
+    pub fn from_pset_string(s: &str) -> Self {
+        let mut parse_stack = vec![];
+        let mut set_buffer = HashSet::<Song>::new();
+        let mut name_buffer = String::new();
+
+        let mut collecting_set = false;
+
+        for c in s.chars() {
+            match c {
+                pset_format::SEPERATOR if collecting_set => {
+                    set_buffer.insert(Song::from_path("song_library/U/", name_buffer).unwrap());
+                    name_buffer = String::new();
+                }
+                pset_format::SEPERATOR => {
+                    parse_stack.push(SongSet::NonTerminal(name_buffer));
+                    name_buffer = String::new();
+                }
+
+                pset_format::SET_START => {
+                    collecting_set = true;
+                }
+                pset_format::SET_END => {
+                    collecting_set = false;
+                    parse_stack.push(SongSet::Terminal(set_buffer));
+                    set_buffer = HashSet::new();
+                }
+
+                pset_format::UNION => {
+                    
+                }
+                pset_format::INTERSECTION => {
+                    
+                }
+                pset_format::DIFFERENCE => {
+                    
+                }
+
+                c => {
+                    name_buffer.push(c);
+                }
+            }
+        }
+        todo!()
+    }
 }
 
 pub struct Playset {
@@ -138,6 +176,12 @@ impl Playset {
             songs: SongTree::Set(SongSet::Terminal(HashSet::new())),
         }
     }
+    pub fn from_pset_string(s: &str, name: String) -> Self {
+        Self {
+            name,
+            songs: SongTree::from_pset_string(s)
+        }
+    }
 }
 
 pub struct Library {
@@ -152,9 +196,9 @@ impl Library {
         let universal_set = universal_dir
             .map(|f| f.unwrap().path())
             .map(|p| {
-                let p2 = p.clone();
+                let dir = p.parent().unwrap();
                 let f_name = p.file_name().unwrap().to_str().unwrap();
-                Song::from_path(p2, f_name.to_owned()).unwrap()
+                Song::from_path(dir, f_name.to_owned()).unwrap()
             }).collect::<HashSet<Song>>();
         let universal_set = Playset {
             name: "U".to_owned(),

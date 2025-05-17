@@ -127,9 +127,9 @@ impl eframe::App for MyEguiApp {
                     for song in &self.songs_to_show {
                         ui.group(|ui| {
                             ui.vertical(|ui| {
-                                ui.label(song.name);
-                                ui.label(song.album);
-                                ui.label(song.artist);
+                                ui.label(&song.name);
+                                ui.label(&song.album);
+                                ui.label(&song.artist);
                                 ui.label(song.duration.to_string());
                             });
                             ui.separator();
@@ -174,7 +174,7 @@ impl eframe::App for MyEguiApp {
 
                         ui.group(|ui| {
                             ui.vertical(|ui| {
-                                ui.label(set.name);
+                                ui.label(&set.name);
                             });
                             ui.separator();
 
