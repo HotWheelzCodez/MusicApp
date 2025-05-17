@@ -50,6 +50,7 @@ pub struct Playset {
 
 #[derive(Serialize, Deserialize)]
 pub struct Library {
+    pub universal_set: Playset,
     pub sets: Vec<Playset>
 }
 impl Library {
@@ -59,11 +60,17 @@ impl Library {
 
         let universal_set = universal_dir
             .map(|f| f.unwrap().file_name())
-            .map(|f| {
-                
-            });
+            .map(|f| Song::from_path(f).unwrap())
+            .collect::<HashSet<Song>>();
+        let universal_set = Playset {
+            name: "U".to_owned(),
+            set: Songset::Primitive(universal_set)
+        };
 
-        todo!()
+        Ok(Self {
+            universal_set,
+            sets: vec![],
+        })
     }
 }
 
