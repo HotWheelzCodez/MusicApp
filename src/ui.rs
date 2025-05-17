@@ -54,7 +54,7 @@ struct MyEguiApp {
     library_name: String,
     stream: Option<OutputStream>,
     stream_handle: Option<OutputStreamHandle>,
-    sink: Option<Sink>,
+    sink: Sink,
     library: playset::Library,
 }
 
@@ -64,8 +64,8 @@ impl MyEguiApp {
         Self {
             display_menu: false,
             stream: Some(stream),
+            sink: Sink::try_new(&handle).unwrap(),
             stream_handle: Some(handle),
-            sink: None,
             library: Library::initialize("./song_library/U", "./song_library/subsets").unwrap(),
             library_name: "".to_string()
         }
@@ -88,8 +88,9 @@ impl eframe::App for MyEguiApp {
                         radius: 2,
                         outline_width: 1.0
                     }, "Create Play set!").clicked() {
-                        let song = "song_library/U/Vylet Pony - CUTIEMARKS (And the Things That Bind Us) - 14 HOW TO KILL A MONSTER.mp3";
-                        music_player::play_music(song, &self.stream_handle);
+                        // let song = "song_library/U/Vylet Pony - CUTIEMARKS (And the Things That Bind Us) - 14 HOW TO KILL A MONSTER.mp3";
+                        // music_player::play_music(song, &self.stream_handle, &self.sink);
+                        music_player::get_youtube_music("https://www.youtube.com/watch?v=T2nBvNBzrP8");
 
                         self.display_menu = true;
                     }
