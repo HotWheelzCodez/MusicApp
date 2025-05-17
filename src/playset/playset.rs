@@ -93,7 +93,12 @@ impl SongTree {
     pub fn to_pset_string(&self) -> String {
         match self {
             SongTree::Operation(op, song_tree_node) => {
-                todo!()
+                format!(
+                    "{}{}{}",
+                    song_tree_node.lhs.to_pset_string(),
+                    song_tree_node.rhs.to_pset_string(),
+                    op
+                )
             },
             SongTree::Set(song_set) => {
                 song_set.to_pset_string()
@@ -111,7 +116,7 @@ impl Playset {
         let mut output_path = song_library.as_ref().to_str().unwrap().to_owned();
         output_path.push_str(&self.name);
 
-        let mut out = self.songs.to_pset_string();
+        let out = self.songs.to_pset_string();
 
         fs::write(output_path, out)?;
 
@@ -121,7 +126,7 @@ impl Playset {
     pub fn empty_terminal(name: String) -> Self {
         Self {
             name,
-            set: SongSet::Terminal(HashSet::new())
+            songs: SongTree::Set(SongSet::Terminal(HashSet::new())),
         }
     }
 }
@@ -144,7 +149,7 @@ impl Library {
             }).collect::<HashSet<Song>>();
         let universal_set = Playset {
             name: "U".to_owned(),
-            set: SongSet::Terminal(universal_set)
+            songs: SongTree::Set(SongSet::Terminal(universal_set))
         };
 
         for file in subset_dir
