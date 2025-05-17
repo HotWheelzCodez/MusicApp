@@ -90,6 +90,10 @@ pub struct SongTreeNode {
 }
 
 impl SongTree {
+    pub fn flatten(&self) -> HashSet<Song> {
+        todo!()
+    }
+
     pub fn to_pset_string(&self) -> String {
         match self {
             SongTree::Operation(op, song_tree_node) => {
@@ -151,7 +155,7 @@ impl Library {
             name: "U".to_owned(),
             songs: SongTree::Set(SongSet::Terminal(universal_set))
         };
-
+        
         for file in subset_dir
             .filter_map(|f| f.ok())
             .filter(|f| f.file_type().unwrap().is_file())
