@@ -1,6 +1,10 @@
 use eframe::egui;
 use egui::{Color32, CornerRadius};
-use crate::playset::{self, playset};
+use crate::playset;
+use crate::music_player;
+use std::io::BufReader;
+use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink};
+use std::fs::File;
 
 struct ButtonStyle {
     base_color: Color32,
@@ -14,7 +18,7 @@ struct ButtonStyle {
 }
 
 fn button(ui: &mut egui::Ui, button_style: &ButtonStyle, text: &str) -> egui::Response {
-    let desired_size = egui::Vec2::new(80.0, 30.0);
+    let desired_size = egui::Vec2::new(100.0, 30.0);
     let (rect, response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
 
     let mut response = response;
@@ -48,11 +52,21 @@ fn button(ui: &mut egui::Ui, button_style: &ButtonStyle, text: &str) -> egui::Re
 struct MyEguiApp {
     display_menu: bool,
     library_name: String,
+    stream: Option<OutputStream>,
+    stream_handle: Option<OutputStreamHandle>,
+    sink: Option<Sink>,
 }
 
 impl MyEguiApp {
     fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        Self::default()
+        let (stream, handle) = OutputStream::try_default().unwrap();
+        Self {
+            display_menu: false,
+            stream: Some(stream),
+            stream_handle: Some(handle),
+            sink: None,
+            ..Default::default()
+        }
     }
 }
 
@@ -72,6 +86,9 @@ impl eframe::App for MyEguiApp {
                         radius: 2,
                         outline_width: 1.0
                     }, "Create Play set!").clicked() {
+                        let song = "song_library/U/Vylet Pony - CUTIEMARKS (And the Things That Bind Us) - 14 HOW TO KILL A MONSTER.mp3";
+                        music_player::play_music(song, &self.stream_handle);
+
                         self.display_menu = true;
                     }
                 });
