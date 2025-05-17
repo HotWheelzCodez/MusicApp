@@ -1,23 +1,27 @@
-use std::{collections::HashSet, io, path::Path, time::Duration};
+use std::{collections::{HashMap, HashSet}, fs, io, path::Path, time::Duration};
+use audiotags::Tag;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Hash, PartialEq, Eq)]
 pub struct Song {
     pub genre: String,
     pub artist: String,
-    pub album: String,
+    pub album: Option<String>,
     pub duration: Duration,
+
+    pub path: String,
 }
 
 impl Song {
-    pub fn from_path<P: AsRef<Path>>(p: P) -> io::Result<Self> {
-        let meta = std::fs::metadata(p)?;
+    pub fn from_path<P: AsRef<Path>>(p: P) -> audiotags::Result<Self> {
+        let meta = Tag::new().read_from_path(&p)?;
         
         Ok(Self {
-            genre: todo!(),
-            artist: todo!(),
-            album: todo!(),
-            duration: todo!(),
+            genre: meta.genre().unwrap_or("").to_owned(),
+            artist: meta.artist().unwrap_or("").to_owned(),
+            album: meta.album().map(|a| a.title.to_owned()),
+            duration: Duration::from_secs_f64(meta.duration().unwrap_or(0.0)),
+            path: p.as_ref().to_str().unwrap().to_owned()
         })
     }
 }
@@ -48,4 +52,23 @@ pub struct Playset {
 pub struct Library {
     pub sets: Vec<Playset>
 }
+impl Library {
+    pub fn initialize<P: AsRef<Path>>(universal_set: P, subsets: P) -> io::Result<Self> {
+        let universal_dir = fs::read_dir(universal_set)?;
+        let subset_dir = fs::read_dir(subsets)?;
+
+        let universal_set = universal_dir
+            .map(|f| f.unwrap().file_name())
+            .map(|f| {
+                
+            });
+
+        todo!()
+    }
+
+    pub fn play_song<P: AsRef<Path>>(song: P) {
+        
+    }
+}
+
 
