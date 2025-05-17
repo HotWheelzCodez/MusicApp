@@ -1,6 +1,8 @@
 use eframe::egui;
 use egui::{Color32, CornerRadius};
 
+mod playset;
+
 struct ButtonStyle {
     base_color: Color32,
     hover_color: Color32,
