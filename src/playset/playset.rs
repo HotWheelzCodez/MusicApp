@@ -59,7 +59,7 @@ impl Library {
         let subset_dir = fs::read_dir(subsets)?;
 
         let universal_set = universal_dir
-            .map(|f| f.unwrap().file_name())
+            .map(|f| f.unwrap().path())
             .map(|f| Song::from_path(f).unwrap())
             .collect::<HashSet<Song>>();
         let universal_set = Playset {
