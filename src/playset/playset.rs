@@ -1,8 +1,9 @@
 use std::{collections::{HashMap, HashSet}, fs, io, path::Path, time::Duration};
 use audiotags::Tag;
-use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Hash, PartialEq, Eq)]
+use super::pset_format;
+
+#[derive(Hash, PartialEq, Eq, Clone)]
 pub struct Song {
     pub genre: String,
     pub artist: String,
@@ -27,28 +28,74 @@ impl Song {
 }
 
 
-#[derive(Serialize, Deserialize, Hash, PartialEq, Eq)]
+#[derive(Hash, PartialEq, Eq)]
 pub enum Transformation {
     Union(String),
     Intersection(String)
 }
 
 
-#[derive(Serialize, Deserialize)]
 pub enum Songset {
-    Primitive(HashSet<Song>),
-    Algrebaic((HashSet<Song>, Vec<Transformation>))
+    Terminal(HashSet<Song>),
+    NonTerminal((String, Vec<Transformation>))
+}
+impl Songset {
+    pub fn flatten(&self) -> HashSet<Song> {
+        match self {
+            Songset::Terminal(set) => set.clone(),
+            Songset::NonTerminal((base, transforms)) => {
+                todo!()
+            },
+        }
+    }
+    pub fn to_pset_string(&self) -> String {
+        let mut out = String::new();
+        match self {
+            Songset::Terminal(set) => {
+                out.push(pset_format::L_BRACE);
+                for song in set {
+                    out.push_str(&song.path);
+                    out.push(pset_format::COMMA)
+                }
+                out.pop();
+                out.push(pset_format::R_BRACE);
+            },
+            Songset::NonTerminal((base, transforms)) => {
+                
+            },
+        }
+        out
+    }
 }
 
 
-#[derive(Serialize, Deserialize)]
 pub struct Playset {
     pub name: String,
     pub set: Songset
 }
+impl Playset {
+    pub fn write_to_file<P: AsRef<Path>>(&self, song_library: P) -> io::Result<()> {
+        let mut output_path = song_library.as_ref().to_str().unwrap().to_owned();
+        output_path.push_str(&self.name);
 
+        let mut out = String::new();
+        for song in self.set.flatten() {
+            
+        }
 
-#[derive(Serialize, Deserialize)]
+        fs::write(output_path, out)?;
+
+        Ok(())
+    }
+
+    pub fn empty_terminal(name: String) -> Self {
+        Self {
+            name,
+            set: Songset::Terminal(HashSet::new())
+        }
+    }
+}
+
 pub struct Library {
     pub universal_set: Playset,
     pub sets: Vec<Playset>
@@ -64,13 +111,25 @@ impl Library {
             .collect::<HashSet<Song>>();
         let universal_set = Playset {
             name: "U".to_owned(),
-            set: Songset::Primitive(universal_set)
+            set: Songset::Terminal(universal_set)
         };
+
+        for file in subset_dir
+            .filter_map(|f| f.ok())
+            .filter(|f| f.file_type().unwrap().is_file())
+            .map(|f| fs::read_to_string(f.path()).unwrap())
+        {
+            
+        }
 
         Ok(Self {
             universal_set,
             sets: vec![],
         })
+    }
+
+    pub fn push_empty_set(&mut self, name: String) {
+        self.sets.push(Playset::empty_terminal(name));
     }
 }
 
