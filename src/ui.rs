@@ -2,6 +2,7 @@ use eframe::egui;
 use egui::{Color32, CornerRadius};
 use crate::playset;
 use crate::music_player;
+use crate::playset::Library;
 use std::io::BufReader;
 use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink};
 use std::fs::File;
@@ -48,13 +49,13 @@ fn button(ui: &mut egui::Ui, button_style: &ButtonStyle, text: &str) -> egui::Re
     response
 }
 
-#[derive(Default)]
 struct MyEguiApp {
     display_menu: bool,
     library_name: String,
     stream: Option<OutputStream>,
     stream_handle: Option<OutputStreamHandle>,
     sink: Option<Sink>,
+    library: playset::Library,
 }
 
 impl MyEguiApp {
@@ -65,7 +66,8 @@ impl MyEguiApp {
             stream: Some(stream),
             stream_handle: Some(handle),
             sink: None,
-            ..Default::default()
+            library: Library::initialize("./song_library/U", "./song_library/subsets").unwrap(),
+            library_name: "".to_string()
         }
     }
 }
