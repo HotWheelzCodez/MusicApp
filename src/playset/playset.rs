@@ -1,4 +1,4 @@
-use std::{collections::HashSet, time::Duration};
+use std::{collections::HashSet, io, path::Path, time::Duration};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Hash, PartialEq, Eq)]
@@ -7,6 +7,19 @@ pub struct Song {
     pub artist: String,
     pub album: String,
     pub duration: Duration,
+}
+
+impl Song {
+    pub fn from_path<P: AsRef<Path>>(p: P) -> io::Result<Self> {
+        let meta = std::fs::metadata(p)?;
+        
+        Ok(Self {
+            genre: todo!(),
+            artist: todo!(),
+            album: todo!(),
+            duration: todo!(),
+        })
+    }
 }
 
 
