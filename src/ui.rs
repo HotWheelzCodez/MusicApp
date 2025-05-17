@@ -1,4 +1,5 @@
 use eframe::egui;
+use egui::TextBuffer;
 use egui::{Color32, CornerRadius};
 use crate::playset;
 use crate::music_player;
@@ -18,8 +19,8 @@ struct ButtonStyle {
     outline_width: f32,
 }
 
-fn button(ui: &mut egui::Ui, button_style: &ButtonStyle, text: &str) -> egui::Response {
-    let desired_size = egui::Vec2::new(100.0, 30.0);
+fn button(ui: &mut egui::Ui, button_style: &ButtonStyle, text: &str, dims: egui::Vec2) -> egui::Response {
+    let desired_size = dims;
     let (rect, response) = ui.allocate_exact_size(desired_size, egui::Sense::click());
 
     let mut response = response;
@@ -87,11 +88,7 @@ impl eframe::App for MyEguiApp {
                         outline_hover_color: Color32::WHITE,
                         radius: 2,
                         outline_width: 1.0
-                    }, "Create Play set!").clicked() {
-                        // let song = "song_library/U/Vylet Pony - CUTIEMARKS (And the Things That Bind Us) - 14 HOW TO KILL A MONSTER.mp3";
-                        // music_player::play_music(song, &self.stream_handle, &self.sink);
-                        music_player::get_youtube_music("https://www.youtube.com/watch?v=T2nBvNBzrP8");
-
+                    }, "Create Play set!", egui::Vec2::new(100.0, 30.0)).clicked() {
                         self.display_menu = true;
                     }
                 });
@@ -102,11 +99,64 @@ impl eframe::App for MyEguiApp {
                     ui.vertical(|ui| {
                         ui.label("Play set name");
                         let response = ui.add(egui::TextEdit::singleline(&mut self.library_name));
-                        if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-                            
+                        if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) || button(ui, &ButtonStyle {
+                                base_color: Color32::from_rgb(200, 50, 180),
+                                hover_color: Color32::from_rgb(180, 30, 160),
+                                text_color: Color32::WHITE,
+                                text_hover_color: Color32::WHITE,
+                                outline_color: Color32::WHITE,
+                                outline_hover_color: Color32::WHITE,
+                                radius: 8,
+                                outline_width: 1.0
+                        }, "Add", egui::Vec2::new(50.0, 30.0)).clicked() {
+                            Library::push_empty_set(&mut self.library, self.library_name.clone()); 
+                            self.library_name.clear();
+                            self.display_menu = false;
                         }
                     })
                 });
+            }
+        });
+
+        egui::CentralPanel::default().show(ctx, |ui| {
+            ui.label(egui::RichText::new("Music").color(Color32::from_rgb(200, 50, 180)).size(20.0));
+            ui.add_space(10.0);
+
+            let items_per_row = 4;
+
+            let sets = &self.library.sets;
+            let sets_len = sets.len();
+
+            let mut i = 0;
+            while i < sets_len {
+                ui.horizontal(|ui| {
+                    for j in 0..items_per_row {
+                        let index = i + j;
+                        if index >= sets_len {
+                            break;
+                        }
+
+                        ui.group(|ui| {
+                            ui.vertical(|ui| {
+                                ui.label(&sets[index].name);
+                            });
+                            ui.separator();
+
+                            if button(ui, &ButtonStyle {
+                                base_color: Color32::from_rgb(200, 50, 180),
+                                hover_color: Color32::from_rgb(180, 30, 160),
+                                text_color: Color32::WHITE,
+                                text_hover_color: Color32::WHITE,
+                                outline_color: Color32::WHITE,
+                                outline_hover_color: Color32::WHITE,
+                                radius: 8,
+                                outline_width: 1.0
+                            }, "Open", egui::Vec2::new(50.0, 30.0)).clicked() {
+                            }
+                        });
+                    }
+                });
+                i += items_per_row;
             }
         });
    }
