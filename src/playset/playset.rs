@@ -30,7 +30,7 @@ impl Song {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SongSet {
     Terminal(HashSet<Song>),
     NonTerminal(String)
@@ -66,13 +66,13 @@ impl SongSet {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum SongTree {
     Operation(char, SongTreeNode),
     Set(SongSet),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SongTreeNode {
     lhs: Box<SongTree>,
     rhs: Box<SongTree>,
@@ -159,7 +159,7 @@ impl SongTree {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Playset {
     pub name: String,
     pub songs: SongTree,
