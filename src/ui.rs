@@ -182,10 +182,10 @@ impl eframe::App for MyEguiApp {
             let sets = &self.library.sets;
             let sets_len = sets.len();
 
-            let vecified: Vec<(&String, &Playset)> = sets.iter().collect();
+            let vecified: Vec<(&String, &playset::Playset)> = sets.iter().collect();
 
             let mut i = 0;
-            for (index, (name, set)) in sets.iter().enumerate() {
+            while i < sets_len {
                 ui.horizontal(|ui| {
                     for j in 0..items_per_row {
                         let index = i + j;
@@ -193,9 +193,10 @@ impl eframe::App for MyEguiApp {
                             break;
                         }
 
+                        let (name, playset) = vecified[index];
                         ui.group(|ui| {
                             ui.vertical(|ui| {
-                                ui.label(&set.name);
+                                ui.label(name);
                             });
                             ui.separator();
 
@@ -209,7 +210,7 @@ impl eframe::App for MyEguiApp {
                                 radius: 8,
                                 outline_width: 1.0
                             }, "Open", egui::Vec2::new(50.0, 30.0)).clicked() {
-                                self.songs_to_show = set.songs.flatten(&self.library.sets);
+                                self.songs_to_show = playset.songs.flatten(&self.library.sets);
                                 self.show_songs = true;
                             }
                         });
