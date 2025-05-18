@@ -59,6 +59,7 @@ struct MyEguiApp {
     sink: Sink,
     library: playset::Library,
     songs_to_show: HashSet<playset::Song>,
+    show_songs: bool,
 }
 
 impl MyEguiApp {
@@ -72,6 +73,7 @@ impl MyEguiApp {
             library: Library::initialize("./song_library/U", "./song_library/subsets").unwrap(),
             library_name: "".to_string(),
             songs_to_show: HashSet::new(),
+            show_songs: false,
         }
     }
 }
@@ -83,22 +85,25 @@ impl eframe::App for MyEguiApp {
                 ui.label(egui::RichText::new("Play set").color(Color32::from_rgb(200, 50, 180)).size(50.0));
 
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    if button(ui, &ButtonStyle {
-                        base_color: Color32::from_rgb(200, 50, 180),
-                        hover_color: Color32::from_rgb(180, 30, 160), text_color: Color32::WHITE,
-                        text_hover_color: Color32::WHITE,
-                        outline_color: Color32::WHITE,
-                        outline_hover_color: Color32::WHITE,
-                        radius: 2,
-                        outline_width: 1.0
-                    }, "Create Play set!", egui::Vec2::new(100.0, 30.0)).clicked() {
-                        self.display_menu = true;
+                    if self.show_songs {
+                    } else {
+                        if button(ui, &ButtonStyle {
+                            base_color: Color32::from_rgb(200, 50, 180),
+                            hover_color: Color32::from_rgb(180, 30, 160), text_color: Color32::WHITE,
+                            text_hover_color: Color32::WHITE,
+                            outline_color: Color32::WHITE,
+                            outline_hover_color: Color32::WHITE,
+                            radius: 2,
+                            outline_width: 1.0
+                        }, "Create Play set!", egui::Vec2::new(100.0, 30.0)).clicked() {
+                            self.display_menu = true;
+                        }
                     }
                 });
             });
 
             if self.display_menu {
-                egui::Window::new("Add Music").resizable([false, false]).default_size((400.0, 400.0)).show(ctx, |ui| {
+                egui::Window::new("Add").resizable([false, false]).default_size((400.0, 400.0)).show(ctx, |ui| {
                     ui.vertical(|ui| {
                         ui.label("Play set name");
                         let response = ui.add(egui::TextEdit::singleline(&mut self.library_name));
@@ -121,8 +126,22 @@ impl eframe::App for MyEguiApp {
             }
         });
 
-        if self.songs_to_show.len() > 0 {
+        if self.show_songs {
             egui::CentralPanel::default().show(ctx, |ui| {
+                if button(ui, &ButtonStyle {
+                    base_color: Color32::from_rgb(200, 50, 180),
+                    hover_color: Color32::from_rgb(180, 30, 160),
+                    text_color: Color32::WHITE,
+                    text_hover_color: Color32::WHITE,
+                    outline_color: Color32::WHITE,
+                    outline_hover_color: Color32::WHITE,
+                    radius: 8,
+                    outline_width: 1.0
+                }, "Back to Play set's", egui::Vec2::new(110.0, 30.0)).clicked() {
+                    self.show_songs = false;
+                    self.songs_to_show.clear();
+                    return;
+                }
                 ui.vertical(|ui| {
                     for song in &self.songs_to_show {
                         ui.group(|ui| {
@@ -144,7 +163,7 @@ impl eframe::App for MyEguiApp {
                                 radius: 8,
                                 outline_width: 1.0
                             }, "Play", egui::Vec2::new(75.0, 30.0)).clicked() {
-
+                                music_player::play_music(&format!("song_library/U/{}", song.name), &self.stream_handle, &self.sink);
                             }
                         });
                     }
@@ -189,6 +208,7 @@ impl eframe::App for MyEguiApp {
                                 outline_width: 1.0
                             }, "Open", egui::Vec2::new(50.0, 30.0)).clicked() {
                                 self.songs_to_show = set.songs.flatten(&self.library.sets);
+                                self.show_songs = true;
                             }
                         });
                     }
