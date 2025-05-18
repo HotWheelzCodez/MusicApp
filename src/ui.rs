@@ -1,10 +1,12 @@
 use eframe::egui;
 use egui::TextBuffer;
 use egui::{Color32, CornerRadius};
-use crate::playset;
+use crate::playset::{self, pset_format, SongTree};
 use crate::music_player;
 use crate::playset::Library;
+use std::cell::{RefCell, RefMut};
 use std::io::BufReader;
+use std::rc::Rc;
 use rodio::{Decoder, OutputStream, OutputStreamHandle, Sink};
 use std::fs::File;
 use std::collections::HashSet;
@@ -70,6 +72,7 @@ struct MyEguiApp {
     sink: Sink,
     library: playset::Library,
     songs_to_show: HashSet<playset::Song>,
+    editing_this_set: Option<RefCell<Rc<SongTree>>>,
     show_songs: bool,
     playing: String,
     display_set_menu: bool,
@@ -91,6 +94,7 @@ impl MyEguiApp {
             selected_set: set,
             library_name: "".to_string(),
             songs_to_show: HashSet::new(),
+            editing_this_set: None,
             show_songs: false,
             playing: String::new(),
             display_set_menu: false,
@@ -145,6 +149,23 @@ impl eframe::App for MyEguiApp {
                         }
                     });
                     if button(ui, &GLOBAL_BUTTON_STYLE, "Transform Set", egui::Vec2::new(100.0, 15.0)).clicked() {
+                        let to_edit = self.editing_this_set.as_ref().unwrap().clone();
+
+                        let mut s = to_edit.borrow().to_pset_string();
+                        s.push_str(&self.selected_set.name);
+                        s.push(pset_format::SEPERATOR);
+                        s.push(match self.selected_transformation.as_str() {
+                            "Union" => pset_format::UNION,
+                            "Difference" => pset_format::DIFFERENCE,
+                            "Intersection" => pset_format::INTERSECTION,
+                            _ => panic!(),
+                        });
+                        *to_edit.borrow_mut() = Rc::new(SongTree::from_pset_string(&s));
+                        println!("?????\n{:#?}", to_edit);
+                        self.editing_this_set = Some(to_edit);
+                        println!("?????Q?@??!??!?\n{:#?}", self.editing_this_set);
+
+                        
                         self.selected_transformation = String::from("Union");
                         self.selected_set = self.library.universal_set.clone();
                         self.display_set_menu = false;
@@ -230,7 +251,8 @@ impl eframe::App for MyEguiApp {
                             ui.separator();
 
                             if button(ui, &GLOBAL_BUTTON_STYLE, "Open", egui::Vec2::new(50.0, 30.0)).clicked() {
-                                self.songs_to_show = playset.songs.flatten(&self.library.sets);
+                                self.songs_to_show = playset.songs.borrow().flatten(&self.library.sets);
+                                self.editing_this_set = Some(RefCell::clone(&playset.songs));
                                 self.show_songs = true;
                             }
                         });

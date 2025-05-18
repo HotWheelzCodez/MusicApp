@@ -1,5 +1,5 @@
 use core::panic;
-use std::{collections::{HashMap, HashSet}, fs, io, path::Path, time::Duration};
+use std::{cell::RefCell, collections::{HashMap, HashSet}, fs, io, path::Path, rc::Rc, time::Duration};
 use audiotags::Tag;
 
 use super::pset_format;
@@ -41,7 +41,7 @@ impl SongSet {
         match self {
             SongSet::Terminal(set) => set.clone(),
             SongSet::NonTerminal(name) => {
-                non_term_map.get(name).unwrap().songs.flatten(non_term_map)
+                non_term_map.get(name).unwrap().songs.borrow().flatten(non_term_map)
             },
         }
     }
@@ -73,8 +73,8 @@ pub enum SongTree {
 
 #[derive(Debug, Clone)]
 pub struct SongTreeNode {
-    lhs: Box<SongTree>,
-    rhs: Box<SongTree>,
+    lhs: RefCell<Rc<SongTree>>,
+    rhs: RefCell<Rc<SongTree>>,
 }
 
 impl SongTree {
@@ -87,7 +87,7 @@ impl SongTree {
                     pset_format::DIFFERENCE => |l: HashSet<Song>, r| l.difference(r).map(|s| s.to_owned()).collect(),
                     _ => unreachable!()
                 };
-                op(song_tree_node.lhs.flatten(non_term_map), &song_tree_node.rhs.flatten(non_term_map))
+                op(song_tree_node.lhs.borrow().flatten(non_term_map), &song_tree_node.rhs.borrow().flatten(non_term_map))
             },
             SongTree::Set(song_set) => {
                 song_set.flatten(non_term_map)
@@ -100,8 +100,8 @@ impl SongTree {
             SongTree::Operation(op, song_tree_node) => {
                 format!(
                     "{}{}{}",
-                    song_tree_node.lhs.to_pset_string(),
-                    song_tree_node.rhs.to_pset_string(),
+                    song_tree_node.lhs.borrow().to_pset_string(),
+                    song_tree_node.rhs.borrow().to_pset_string(),
                     op
                 )
             },
@@ -142,8 +142,8 @@ impl SongTree {
                     let right = parse_stack.pop().unwrap();
                     let left = parse_stack.pop().unwrap();
                     parse_stack.push(SongTree::Operation(c, SongTreeNode {
-                        lhs: Box::new(left),
-                        rhs: Box::new(right)
+                        lhs: RefCell::new(Rc::new(left)),
+                        rhs: RefCell::new(Rc::new(right))
                     }));
                 }
 
@@ -162,7 +162,7 @@ impl SongTree {
 #[derive(Debug, Clone)]
 pub struct Playset {
     pub name: String,
-    pub songs: SongTree,
+    pub songs: RefCell<Rc<SongTree>>,
 }
 impl Playset {
     /// just put "song_library/" as the param
@@ -171,7 +171,7 @@ impl Playset {
         output_path.push_str("subsets/");
         output_path.push_str(&self.name);
 
-        let out = self.songs.to_pset_string();
+        let out = self.songs.borrow().to_pset_string();
 
         fs::write(output_path, out)?;
 
@@ -181,13 +181,13 @@ impl Playset {
     pub fn empty_terminal(name: String) -> Self {
         Self {
             name,
-            songs: SongTree::Set(SongSet::Terminal(HashSet::new())),
+            songs: RefCell::new(Rc::new(SongTree::Set(SongSet::Terminal(HashSet::new())))),
         }
     }
     pub fn from_pset_string(s: &str, name: String) -> Self {
         Self {
             name,
-            songs: SongTree::from_pset_string(s)
+            songs: RefCell::new(Rc::new(SongTree::from_pset_string(s)))
         }
     }
 }
@@ -210,7 +210,7 @@ impl Library {
             }).collect::<HashSet<Song>>();
         let universal_set = Playset {
             name: "U".to_owned(),
-            songs: SongTree::Set(SongSet::Terminal(universal_set))
+            songs: RefCell::new(Rc::new(SongTree::Set(SongSet::Terminal(universal_set))))
         };
 
         let mut sets = HashMap::new();
