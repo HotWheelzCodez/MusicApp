@@ -66,11 +66,13 @@ impl SongSet {
     }
 }
 
+#[derive(Debug)]
 pub enum SongTree {
     Operation(char, SongTreeNode),
     Set(SongSet),
 }
 
+#[derive(Debug)]
 pub struct SongTreeNode {
     lhs: Box<SongTree>,
     rhs: Box<SongTree>,
@@ -110,7 +112,8 @@ impl SongTree {
         }
     }
     pub fn from_pset_string(s: &str) -> Self {
-        let mut parse_stack = vec![];
+        println!("{}", s);
+        let mut parse_stack: Vec<SongTree> = vec![];
         let mut set_buffer = HashSet::<Song>::new();
         let mut name_buffer = String::new();
 
@@ -123,7 +126,7 @@ impl SongTree {
                     name_buffer = String::new();
                 }
                 pset_format::SEPERATOR => {
-                    parse_stack.push(SongSet::NonTerminal(name_buffer));
+                    parse_stack.push(SongTree::Set(SongSet::NonTerminal(name_buffer)));
                     name_buffer = String::new();
                 }
 
@@ -132,18 +135,17 @@ impl SongTree {
                 }
                 pset_format::SET_END => {
                     collecting_set = false;
-                    parse_stack.push(SongSet::Terminal(set_buffer));
+                    parse_stack.push(SongTree::Set(SongSet::Terminal(set_buffer)));
                     set_buffer = HashSet::new();
                 }
 
-                pset_format::UNION => {
-                    
-                }
-                pset_format::INTERSECTION => {
-                    
-                }
-                pset_format::DIFFERENCE => {
-                    
+                pset_format::UNION..=pset_format::DIFFERENCE => {
+                    let right = parse_stack.pop().unwrap();
+                    let left = parse_stack.pop().unwrap();
+                    parse_stack.push(SongTree::Operation(c, SongTreeNode {
+                        lhs: Box::new(left),
+                        rhs: Box::new(right)
+                    }));
                 }
 
                 c => {
@@ -151,8 +153,8 @@ impl SongTree {
                 }
             }
         }
-        println!("{:?}", parse_stack);
-        todo!()
+        println!("{:#?}", parse_stack);
+        parse_stack.pop().unwrap()
     }
 }
 
