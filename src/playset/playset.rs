@@ -154,6 +154,7 @@ impl SongTree {
             }
         }
         println!("{:#?}", parse_stack);
+        println!("{}", name_buffer);
         parse_stack.pop().unwrap()
     }
 }
