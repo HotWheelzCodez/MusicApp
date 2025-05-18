@@ -54,7 +54,6 @@ impl SongSet {
                     out.push_str(&song.name);
                     out.push(pset_format::SEPERATOR)
                 }
-                out.pop();
                 out.push(pset_format::SET_END);
             },
             SongSet::NonTerminal(name) => {
@@ -112,7 +111,7 @@ impl SongTree {
         }
     }
     pub fn from_pset_string(s: &str) -> Self {
-        println!("{}", s);
+        println!("from_pset:\n{}", s);
         let mut parse_stack: Vec<SongTree> = vec![];
         let mut set_buffer = HashSet::<Song>::new();
         let mut name_buffer = String::new();
@@ -153,8 +152,9 @@ impl SongTree {
                 }
             }
         }
-        println!("{:#?}", parse_stack);
-        println!("{}", name_buffer);
+        println!("p_stack:\n{:#?}", parse_stack);
+        println!("nb:\n{}", name_buffer);
+        println!("cs:\n{}", collecting_set);
         parse_stack.pop().unwrap()
     }
 }
