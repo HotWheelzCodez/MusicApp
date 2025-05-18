@@ -165,8 +165,10 @@ pub struct Playset {
     pub songs: SongTree,
 }
 impl Playset {
+    /// just put "song_library/" as the param
     pub fn write_to_file<P: AsRef<Path>>(&self, song_library: P) -> io::Result<()> {
         let mut output_path = song_library.as_ref().to_str().unwrap().to_owned();
+        output_path.push_str("subsets/");
         output_path.push_str(&self.name);
 
         let out = self.songs.to_pset_string();
