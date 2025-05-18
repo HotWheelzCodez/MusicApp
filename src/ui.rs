@@ -182,6 +182,8 @@ impl eframe::App for MyEguiApp {
             let sets = &self.library.sets;
             let sets_len = sets.len();
 
+            let vecified: Vec<(&String, &Playset)> = sets.iter().collect();
+
             let mut i = 0;
             for (index, (name, set)) in sets.iter().enumerate() {
                 ui.horizontal(|ui| {

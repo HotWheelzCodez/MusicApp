@@ -159,6 +159,7 @@ impl SongTree {
     }
 }
 
+#[derive(Debug)]
 pub struct Playset {
     pub name: String,
     pub songs: SongTree,
@@ -219,6 +220,8 @@ impl Library {
         {
             sets.insert(name.clone(), Playset::from_pset_string(&file, name));
         }
+
+        println!("Sets:\n{:#?}", sets);
 
         Ok(Self {
             universal_set,
